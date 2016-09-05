@@ -46,7 +46,7 @@ public class ActSingle extends AppCompatActivity {
                         Log.d("ddddd",msg);
                         Bundle bundle = new Bundle();
                         bundle.putString("editText","asd");
-                        EventBusLite.getDefault().post("onEventChangeEditText",bundle);
+                        EventBusLite.getDefault().post(bundle);
                     }
                 }.start();
             }
@@ -60,7 +60,7 @@ public class ActSingle extends AppCompatActivity {
         EventBusLite.getDefault().unregister(this);
     }
 
-    public void onEventChangeEditText(Bundle bundle){
+    public void onEventOnMainThread(Bundle bundle){
         String msg = "onEventChangeEditText:"+Thread.currentThread().getName()+"  "+Thread.currentThread().getId();
         Log.d("ddddd",msg);
         String editText = bundle.getString("editText");

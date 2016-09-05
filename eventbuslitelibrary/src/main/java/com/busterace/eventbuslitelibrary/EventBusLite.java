@@ -7,6 +7,7 @@ import android.os.Looper;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 轻量版的EventBus
@@ -46,19 +47,18 @@ public class EventBusLite {
     }
 
     public synchronized void unregister(Object object) {
-        objectArrayList.remove(object);
+        map.remove(object);
     }
 
-    public void post(final String eventName, final Bundle bundle) {
+    public void post(final Bundle bundle) {
 
         handler.post(new Runnable() {
             @Override
             public void run() {
-                for (Object object : objectArrayList) {
+                for (Map.Entry<Object,Method> entry : map.entrySet()) {
+                    Method method = entry.getValue();
                     try {
-                        Class<?> clazz = object.getClass();
-                        Method onEventMethod = clazz.getMethod(eventName, Bundle.class);
-                        onEventMethod.invoke(object, bundle);
+                        method.invoke(entry.getKey(),bundle);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
