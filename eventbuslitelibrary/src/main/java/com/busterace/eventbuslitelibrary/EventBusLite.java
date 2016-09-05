@@ -5,7 +5,6 @@ import android.os.Handler;
 import android.os.Looper;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,9 +14,8 @@ import java.util.Map;
  */
 public class EventBusLite {
     private static EventBusLite eventBusLite;
-    private ArrayList<Object> objectArrayList = new ArrayList<>();
     private Handler handler = new Handler(Looper.getMainLooper());
-    private HashMap<Object, Method> map =new HashMap<>();
+    private HashMap<Object, Method> map = new HashMap<>();
 
 
     private EventBusLite() {
@@ -35,19 +33,36 @@ public class EventBusLite {
     }
 
 
-    public synchronized void  register(Object object) {
-        Class<?> clazz = object.getClass();
-        try {
-            Method method = clazz.getMethod("onEventOnMainThread", Bundle.class);
-            map.put(object,method);
-            objectArrayList.add(object);
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
+    public void register(Object object) {
+        if (isRegister(object)){
+            return;
+        }
+        synchronized (EventBusLite.class){
+            try {
+                if (!isRegister(object)){
+                    Class<?> clazz = object.getClass();
+                    Method method = clazz.getMethod("onEventOnMainThread", Bundle.class);
+                    map.put(object, method);
+                }
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            }
         }
     }
 
-    public synchronized void unregister(Object object) {
-        map.remove(object);
+    private Boolean isRegister(Object object) {
+        return map.containsKey(object);
+    }
+
+    public void unregister(Object object) {
+        if (!isRegister(object)){
+            return;
+        }
+        synchronized (EventBusLite.class){
+            if (isRegister(object)){
+                map.remove(object);
+            }
+        }
     }
 
     public void post(final Bundle bundle) {
@@ -55,10 +70,10 @@ public class EventBusLite {
         handler.post(new Runnable() {
             @Override
             public void run() {
-                for (Map.Entry<Object,Method> entry : map.entrySet()) {
+                for (Map.Entry<Object, Method> entry : map.entrySet()) {
                     Method method = entry.getValue();
                     try {
-                        method.invoke(entry.getKey(),bundle);
+                        method.invoke(entry.getKey(), bundle);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
